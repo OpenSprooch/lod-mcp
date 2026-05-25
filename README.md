@@ -1,90 +1,16 @@
 # LOD-MCP
 
-A token-optimized Model Context Protocol (MCP) server for the [Luxembourgish Online Dictionary (LOD)](https://lod.lu).
+Look up Luxembourgish words in the [LOD dictionary](https://lod.lu) from any MCP-compatible AI tool — with minimal token usage.
 
-This MCP server enables Claude to look up Luxembourgish words, get translations, and access dictionary data with minimal token usage.
-
-## Features
-
-- **Token-Efficient**: Returns compact data structures with short keys and optional fields
-- **Cached**: 1-hour TTL cache reduces API calls and improves response times  
-- **Rate-Limited**: Respects LOD API with 100ms intervals between requests
-- **Resilient**: Retries transient upstream failures once and returns structured error payloads
-- **Luxembourgish-First Suggestions**: Autocomplete only returns Luxembourgish entries
-- **Multi-Language**: Supports German (de), French (fr), English (en), Portuguese (pt), and Dutch (nl) translations
-- **Batch Operations**: Look up multiple words/IDs in a single call (`search_words`, `get_entries`, `get_defs`, `get_conjugations`)
-
-## Installation
-
-### Quick Install (Recommended)
+## Quick Start
 
 ```bash
 git clone https://github.com/Mohammed-Ashour/lod-mcp
 cd lod-mcp
-./install.sh
+./install.sh        # checks Python 3.13+, creates venv, installs, tests
 ```
 
-The install script will:
-
-- ✓ Check Python version (3.13+ required)
-- ✓ Create virtual environment
-- ✓ Install the project and its dependencies
-- ✓ Create a wrapper script that runs the installed CLI
-- ✓ Test the installation
-- ✓ Show Claude Desktop configuration
-
-### Manual Installation
-
-If you prefer manual setup:
-
-**1. Prerequisites:**
-
-install `uv` from [here](https://docs.astral.sh/uv/getting-started/installation/) (recommended) or ensure pip is available
-
-**2. Setup:**
-
-```bash
-git clone https://github.com/Mohammed-Ashour/lod-mcp
-cd lod-mcp
-```
-
-**3. Create Virtual Environment:**
-
-Using `uv`:
-
-```bash
-uv venv .venv --python 3.13
-uv pip install --python .venv/bin/python -e .
-```
-
-Or using standard Python:
-
-```bash
-python3.13 -m venv .venv
-.venv/bin/python -m pip install -e .
-```
-
-**4. Create Wrapper Script:**
-
-Create `run-mcp.sh`:
-
-```bash
-#!/bin/bash
-export PYTHONUNBUFFERED=1
-exec /path/to/lod-mcp/.venv/bin/lod-mcp
-```
-
-Make executable:
-
-```bash
-chmod +x run-mcp.sh
-```
-
-### Claude Desktop Configuration
-
-Add to your Claude Desktop config:
-
-**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+Then add to **Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 
 ```json
 {
@@ -96,343 +22,102 @@ Add to your Claude Desktop config:
 }
 ```
 
-**Restart Claude Desktop** (Cmd+Q then reopen) to load the MCP server.
+Restart Claude (Cmd+Q → reopen) and you're done.
 
-## Supported Tools
+<details>
+<summary>Manual installation</summary>
 
-### 1. `search_word`
+1. Install [uv](https://docs.astral.sh/uv/getting-started/installation/) (or have pip)
+2. `uv venv .venv --python 3.13 && uv pip install --python .venv/bin/python -e .`
+3. Create `run-mcp.sh`:
+   ```bash
+   #!/bin/bash
+   export PYTHONUNBUFFERED=1
+   exec /path/to/lod-mcp/.venv/bin/lod-mcp
+   ```
+4. `chmod +x run-mcp.sh`
+</details>
 
-Search for Luxembourgish words and get entry IDs.
+## Tools
 
-**Parameters:**
+All tools follow a simple two-step flow — **search** for a word to get an ID, then **look up** that ID for details:
 
-- `word` (str): The word to search
-- `max_results` (int, optional): Max IDs to return (default: 5)
+```mermaid
+graph LR
+  subgraph Search["🔍 Search"]
+    direction LR
+    W["word(s)"] --> search_word
+    W --> search_word_brief
+    W --> search_words
+    P["prefix"] --> autocomplete
+  end
 
-**Returns:** `List[str]` - LOD entry IDs (e.g., `["HAUS1", "HAUSEN1"]`)
+  subgraph Lookup["📖 Lookup"]
+    direction LR
+    ID["lod_id"] --> get_entry
+    ID --> get_def
+    ID --> get_conjugation
+    IDs["lod_ids"] --> get_entries
+    IDs --> get_defs
+    IDs --> get_conjugations
+  end
 
-**Example:**
+  search_word & search_word_brief & autocomplete --> ID
+  search_words --> IDs
 
-```python
-search_word("haus")  # Returns: ["HAUS1", "HAUSEN1"]
+  subgraph Cache["⚙️ Cache"]
+    cache_stats
+    cache_clear
+  end
 ```
 
-### 2. `search_word_brief`
+| Tool | What it does | Key params |
+|------|-------------|------------|
+| `search_word` | Find words → list of LOD IDs | `word`, `max_results` |
+| `search_word_brief` | Find words → `{id: "word (POS)"}` | `word`, `max_results` |
+| `search_words` ⭐ | Batch search multiple words | `words[]`, `max_results` |
+| `autocomplete` | Type-ahead suggestions | `prefix`, `limit` |
+| `get_entry` | Full entry details | `lod_id`, `langs`, `max_examples` |
+| `get_entries` ⭐ | Batch entry details | `lod_ids[]`, `langs`, `max_examples` |
+| `get_def` | Single-language definition string | `lod_id`, `lang` |
+| `get_defs` ⭐ | Batch definitions | `lod_ids[]`, `lang` |
+| `get_conjugation` | Verb conjugation table | `lod_id` |
+| `get_conjugations` ⭐ | Batch conjugations | `lod_ids[]` |
+| `cache_stats` | Cache hit/miss stats | — |
+| `cache_clear` | Clear cache | — |
 
-Search with minimal preview info.
+⭐ = prefer these over calling single-word tools in a loop — fewer tool calls and tokens.
 
-**Parameters:**
+### Quick Examples
 
-- `word` (str): The word to search
-- `max_results` (int, optional): Max results (default: 3)
-
-**Returns:** `Dict[str, str]` - Mapping ID to "word (POS)"
-
-**Example:**
-
-```python
-search_word_brief("haus")  # Returns: {"HAUS1": "Haus (N)", "HAUSEN1": "hausen (V)"}
 ```
+# Search
+search_word("haus")              → ["HAUS1", "HAUSEN1"]
+search_word_brief("haus")        → {"HAUS1": "Haus (N)", "HAUSEN1": "hausen (V)"}
+autocomplete("ha", limit=3)      → "haus, hausen, hausfrau"
 
-### 3. `autocomplete`
+# Look up
+get_def("HAUS1", "en")           → "Haus: house building; house household, family"
+get_entry("GOEN1", langs="en")   → {id, w, pos, ipa, tr, ex, infl, audio …}
+get_conjugation("GOEN1")         → {inf, pp, aux, ind, cnd, imp …}
 
-Get word suggestions.
-
-**Parameters:**
-
-- `prefix` (str): Partial word to complete
-- `limit` (int, optional): Max suggestions (default: 5)
-
-**Returns:** `str` - Comma-separated suggestions
-
-**Example:**
-
-```python
-autocomplete("ha", limit=3)  # Returns: "haus, hausen, hausfrau"
+# Batch (recommended for multiple words)
+search_words(["haus","schoul"])  → {"haus": {"HAUS1": "Haus (N)"}, "schoul": {"SCHOUL1": "Schoul (N)"}}
+get_defs(["HAUS1","SCHOUL1"])    → {"HAUS1": "Haus: house …", "SCHOUL1": "Schoul: school …"}
 ```
-
-### 4. `get_entry`
-
-Get word details with configurable fields.
-
-**Parameters:**
-
-- `lod_id` (str): The LOD entry ID (e.g., "HAUS1")
-- `langs` (str, optional): Comma-separated language codes (default: "de,fr,en")
-- `max_examples` (int, optional): Max examples (default: 2, 0 to skip)
-
-**Returns:** `Dict` - Compact dictionary with word data
-
-**Example:**
-
-```python
-get_entry("HAUS1", langs="en,de", max_examples=1)
-# Returns:
-# {
-#   "id": "HAUS1",
-#   "w": "Haus",
-#   "pos": "SUBST",
-#   "ipa": "hæːʊs",
-#   "tr": {"en": "house building", "de": "Haus Wohngebäude"},
-#   "ex": ["mir hunn nach vill Aarbecht..."],
-#   "infl": "Haiser, Haus",
-#   "audio": true
-# }
-```
-
-### 5. `get_def`
-
-Get single-language definition as minimal string.
-
-**Parameters:**
-
-- `lod_id` (str): The LOD entry ID
-- `lang` (str, optional): Language code (default: "en")
-
-**Returns:** `str` - Definition string
-
-**Example:**
-
-```python
-get_def("HAUS1", "en")  # Returns: "Haus: house building; house household, family"
-```
-
----
-
-## Batch Operations (Multi-Lookup Tools)
-
-Use these tools when you need to look up **multiple words or IDs at once**. They reduce API calls and token usage compared to calling single-word tools repeatedly.
-
-### `search_words` ⭐ RECOMMENDED
-
-Search for multiple words simultaneously. Returns a dictionary mapping each input word to its search results.
-
-**Parameters:**
-
-- `words` (List[str]): List of words to search
-- `max_results` (int, optional): Max results per word (default: 3)
-
-**Returns:** `Dict[str, Dict[str, str]]` - `{word: {id: "word (POS)", ...}, ...}`
-
-**Example:**
-
-```python
-search_words(["haus", "schoul", "bierg"])
-# Returns:
-# {
-#   "haus": {"HAUS1": "Haus (N)", "HAUSEN1": "hausen (V)"},
-#   "schoul": {"SCHOUL1": "Schoul (N)"},
-#   "bierg": {"BIERG1": "Bierg (N)"}
-# }
-```
-
-### `get_entries` ⭐ RECOMMENDED
-
-Get full entry details for multiple LOD IDs at once.
-
-**Parameters:**
-
-- `lod_ids` (List[str]): List of LOD entry IDs
-- `langs` (str, optional): Comma-separated language codes (default: "de,fr,en")
-- `max_examples` (int, optional): Max examples per entry (default: 2)
-
-**Returns:** `Dict[str, Dict]` - `{lod_id: entry_data, ...}`
-
-**Example:**
-
-```python
-get_entries(["HAUS1", "SCHOUL1"], langs="en", max_examples=1)
-# Returns:
-# {
-#   "HAUS1": {"id": "HAUS1", "w": "Haus", "pos": "SUBST", "tr": {"en": "house"}},
-#   "SCHOUL1": {"id": "SCHOUL1", "w": "Schoul", "pos": "SUBST", "tr": {"en": "school"}}
-# }
-```
-
-### `get_defs` ⭐ RECOMMENDED
-
-Get minimal definitions for multiple LOD IDs at once.
-
-**Parameters:**
-
-- `lod_ids` (List[str]): List of LOD entry IDs
-- `lang` (str, optional): Language code (default: "en")
-
-**Returns:** `Dict[str, str]` - `{lod_id: "word: definition", ...}`
-
-**Example:**
-
-```python
-get_defs(["HAUS1", "SCHOUL1"], lang="en")
-# Returns:
-# {
-#   "HAUS1": "Haus: house building",
-#   "SCHOUL1": "Schoul: school; school building"
-# }
-```
-
----
-
-### 6. `get_conjugation`
-
-Get compact verb conjugation data for a single LOD entry ID.
-
-**Parameters:**
-
-- `lod_id` (str): The LOD entry ID
-
-**Returns:** `Dict` - Compact conjugation dictionary
-
-**Example:**
-
-```python
-get_conjugation("GOEN1")
-# Returns:
-# {
-#   "id": "GOEN1",
-#   "w": "goen",
-#   "pos": "VRB",
-#   "inf": "goen",
-#   "pp": "gaangen / gaang",
-#   "aux": "sinn",
-#   "sep": false,
-#   "ind": {"prs": {"p1": "ginn", "p2": "gees"}},
-#   "cnd": {"prs": {"p1": "géing", "p2": "géings"}},
-#   "imp": {"p2": "géi!", "p5": "gitt!"}
-# }
-```
-
-### 7. `get_conjugations`
-
-Get compact verb conjugation data for multiple LOD entry IDs at once.
-
-**Parameters:**
-
-- `lod_ids` (List[str]): List of LOD entry IDs
-
-**Returns:** `Dict[str, Dict]` - Mapping of LOD IDs to conjugation data
-
-### 8. `cache_stats`
-
-Get cache performance statistics.
-
-**Returns:** `str` - Stats in format "hits/misses/rate% (size items)"
-
-### 9. `cache_clear`
-
-Clear the API response cache.
-
-**Returns:** `str` - "OK"
-
-## Usage Examples
-
-> 💡 **Tip for AI Tools:** When looking up multiple words, always use batch tools (`search_words`, `get_entries`, `get_defs`) instead of calling single-word tools in a loop. They're faster and use fewer tokens and tool calls.
-
-### Basic Word Lookup
-
-1. **Search:**
-  ```python
-   ids = search_word("haus")  # ["HAUS1", "HAUSEN1"]
-  ```
-2. **Get definition:**
-  ```python
-   definition = get_def("HAUS1", "en")
-   # "Haus: house building; house household..."
-  ```
-
-### Working with Verbs
-
-```python
-# Search for verb
-ids = search_word("goen")
-
-# Get full entry
-entry = get_entry("GOEN1", langs="en", max_examples=1)
-
-# Get dedicated conjugation table
-conj = get_conjugation("GOEN1")
-# Check conj["ind"]["prs"] for present tense forms
-```
-
-### Batch Lookup Example (Recommended)
-
-```python
-# Search multiple words at once
-results = search_words(["haus", "schoul", "bierg"], max_results=2)
-# Returns all results in one call
-
-# Get definitions for multiple IDs
-ids = ["HAUS1", "SCHOUL1", "BIERG1"]
-defs = get_defs(ids, lang="en")
-
-# Get full entries for multiple IDs
-entries = get_entries(ids, langs="de,fr", max_examples=1)
-
-# Get conjugations for multiple verbs
-conjugations = get_conjugations(["GOEN1"])
-```
-
-## Using the LOD Skill (Non-MCP Tools)
-
-If your AI tool doesn't support MCP, you can use the LOD skill directly. The skill provides the same functionality by making HTTP API calls to LOD.
-
-
-### Skill Features
-
-The skill provides structured guidance for:
-
-- **Translation lookups** (de, fr, en, pt, nl)
-- **Pronunciation** (IPA notation)
-- **Conjugations** (compact verb tables)
-- **Example sentences** with audio links
-- **Batch operations** (efficient multi-word lookups)
-- **Error handling** patterns
-
 
 ## Troubleshooting
 
-### Installation Issues
+- **Install failed?** — ensure Python 3.13+ and [uv](https://docs.astral.sh/uv/) are available
+- **Server won't start?** — test manually: `./run-mcp.sh` should output JSON
+- **Import errors?** — reinstall: `.venv/bin/python -m pip install -e .`
+- **Start fresh:** `./uninstall.sh && ./install.sh`
 
-**If the install script fails:**
+## Details
 
-```bash
-# Check Python version
-python3.13 --version  # Should be 3.13+
+- **Cache** — 1-hour TTL, reduces duplicate API calls
+- **Rate-limited** — 100ms between requests, respects the LOD API
+- **Languages** — German, French, English, Portuguese, Dutch
+- **Source** — [LOD API](https://lod.lu/api/doc) by the Luxembourgish Ministry of Culture
 
-# Install uv (recommended package manager)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-### Server won't start
-
-1. Ensure the CLI exists: `.venv/bin/lod-mcp`
-2. Ensure wrapper script is executable: `chmod +x run-mcp.sh`
-3. Check Claude Desktop logs: `~/Library/Logs/Claude/mcp*.log` (macOS)
-4. Test manually: `./run-mcp.sh` - should output JSON
-
-### Import errors
-
-Reinstall the project into the virtual environment with `.venv/bin/python -m pip install -e .`.
-
-
-### API errors?
-- Check you're waiting 100ms between requests
-- Verify word exists in Luxembourgish
-- Test endpoints directly with curl
-
-### Reinstalling
-
-To start fresh:
-
-```bash
-./uninstall.sh  # Removes venv and wrapper
-./install.sh    # Reinstalls everything
-```
-
-## API Source
-
-Uses the public [LOD API](https://lod.lu/api/doc) provided by the Luxembourgish Ministry of Culture.
-
-## License
-
-MIT
+MIT License
