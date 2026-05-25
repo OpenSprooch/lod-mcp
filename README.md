@@ -9,6 +9,7 @@ This MCP server enables Claude to look up Luxembourgish words, get translations,
 - **Token-Efficient**: Returns compact data structures with short keys and optional fields
 - **Cached**: 1-hour TTL cache reduces API calls and improves response times  
 - **Rate-Limited**: Respects LOD API with 100ms intervals between requests
+- **Resilient**: Retries transient upstream failures once and returns structured error payloads
 - **Multi-Language**: Supports German (de), French (fr), English (en), Portuguese (pt), and Dutch (nl) translations
 - **Batch Operations**: Look up multiple words/IDs in a single call (`search_words`, `get_entries`, `get_defs`)
 
