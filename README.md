@@ -4,10 +4,12 @@ Look up Luxembourgish words in the [LOD dictionary](https://lod.lu) from any MCP
 
 ## Quick Start
 
+**Prerequisites:** [uv](https://docs.astral.sh/uv/getting-started/installation/)
+
 ```bash
 git clone https://github.com/Mohammed-Ashour/lod-mcp
 cd lod-mcp
-./install.sh        # checks Python 3.13+, creates venv, installs, tests
+./install.sh          # uv venv + install + test
 ```
 
 Then add to **Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
@@ -27,15 +29,18 @@ Restart Claude (Cmd+Q → reopen) and you're done.
 <details>
 <summary>Manual installation</summary>
 
-1. Install [uv](https://docs.astral.sh/uv/getting-started/installation/) (or have pip)
-2. `uv venv .venv --python 3.13 && uv pip install --python .venv/bin/python -e .`
-3. Create `run-mcp.sh`:
-   ```bash
-   #!/bin/bash
-   export PYTHONUNBUFFERED=1
-   exec /path/to/lod-mcp/.venv/bin/lod-mcp
-   ```
-4. `chmod +x run-mcp.sh`
+```bash
+uv venv .venv --python 3.13
+uv pip install --python .venv/bin/python -e .
+```
+
+Create `run-mcp.sh`:
+```bash
+#!/bin/bash
+export PYTHONUNBUFFERED=1
+exec /path/to/lod-mcp/.venv/bin/lod-mcp
+```
+`chmod +x run-mcp.sh`
 </details>
 
 ## Tools
@@ -108,9 +113,9 @@ get_defs(["HAUS1","SCHOUL1"])    → {"HAUS1": "Haus: house …", "SCHOUL1": "Sc
 
 ## Troubleshooting
 
-- **Install failed?** — ensure Python 3.13+ and [uv](https://docs.astral.sh/uv/) are available
+- **Install failed?** — make sure [uv](https://docs.astral.sh/uv/) is installed and Python 3.13+ is available
 - **Server won't start?** — test manually: `./run-mcp.sh` should output JSON
-- **Import errors?** — reinstall: `.venv/bin/python -m pip install -e .`
+- **Import errors?** — reinstall: `uv pip install --python .venv/bin/python -e .`
 - **Start fresh:** `./uninstall.sh && ./install.sh`
 
 ## Details
