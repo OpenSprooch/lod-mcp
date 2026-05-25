@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
-from urllib.parse import urlencode, quote
 import time
+from typing import Any
+from urllib.parse import quote, urlencode
 
 import requests
 

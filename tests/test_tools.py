@@ -1,8 +1,7 @@
 import pytest
 
-from server.api import LODNotFoundError
 from server import tools
-
+from server.api import LODNotFoundError
 
 RAW_ENTRY = {
     "entry": {
@@ -37,7 +36,10 @@ RAW_ENTRY = {
                                                 "type": "text",
                                                 "parts": [
                                                     {"type": "word", "content": "eist"},
-                                                    {"type": "inflectedHeadword", "content": "Haus"},
+                                                    {
+                                                        "type": "inflectedHeadword",
+                                                        "content": "Haus",
+                                                    },
                                                 ],
                                             }
                                         ]
@@ -113,7 +115,9 @@ def test_autocomplete_filters_non_luxembourgish_items(monkeypatch: pytest.Monkey
     assert tools.autocomplete("ha", limit=10) == "hal, har"
 
 
-def test_get_entry_and_get_entries_share_the_same_projection(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_get_entry_and_get_entries_share_the_same_projection(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(tools, "entry_api", lambda lod_id: RAW_ENTRY)
 
     single = tools.get_entry("HAUS1", langs="en,de", max_examples=1)

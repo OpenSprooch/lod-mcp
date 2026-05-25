@@ -85,7 +85,10 @@ def search_word_brief(word: str, max_results: int = 3) -> dict[str, str] | dict[
 
 
 @mcp.tool()
-def search_words(words: list[str], max_results: int = 3) -> dict[str, dict[str, str] | dict[str, Any]]:
+def search_words(
+    words: list[str],
+    max_results: int = 3,
+) -> dict[str, dict[str, str] | dict[str, Any]]:
     """
     Search for multiple words at once and return results for each.
 
