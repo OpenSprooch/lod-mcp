@@ -1,0 +1,10 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 01 · LM Bracket — open chevron ⟨ (MCP / open protocol) + L (LOD, the white voice) -->
+  <rect x="16" y="16" width="480" height="480" rx="104" fill="#0E1A2B"/>
+  <!-- Open bracket, tricolor: red top arm, blue bottom arm; opens rightward toward the L -->
+  <path d="M116 256 L216 148" stroke="#EF3340" stroke-width="40" stroke-linecap="round"/>
+  <path d="M116 256 L216 364" stroke="#00A3E0" stroke-width="40" stroke-linecap="round"/>
+  <!-- L = LOD, white (the voice): vertical stem + foot -->
+  <rect x="268" y="148" width="44" height="216" rx="8" fill="#FFFFFF"/>
+  <rect x="268" y="320" width="128" height="44" rx="8" fill="#FFFFFF"/>
+</svg>

@@ -1,13 +1,29 @@
-# LOD-MCP
+<div align="center">
+  <img src="icons/logo-512.png" width="120" alt="LOD-MCP logo" />
+  <h1>LOD-MCP</h1>
+  <p><strong>A token-optimized MCP server for the Luxembourgish Online Dictionary</strong></p>
+  <p>
+    Look up Luxembourgish words in the <a href="https://lod.lu">LOD</a> dictionary
+    from any MCP-compatible AI tool — search, look up, conjugate, and cache,
+    all shaped to cost the model as few tokens as possible.
+  </p>
+  <p>
+    <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-server-39a7c4" alt="MCP" /></a>
+    <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/Python-3.13%2B-457b9d" alt="Python 3.13+" /></a>
+    <a href="https://docs.astral.sh/uv/"><img src="https://img.shields.io/badge/uv-managed-dea584" alt="uv" /></a>
+    <img src="https://img.shields.io/badge/License-MIT-5ec48a" alt="MIT License" />
+    <a href="https://lod.lu/api/doc"><img src="https://img.shields.io/badge/source-LOD%20API-0E1A2B" alt="LOD API" /></a>
+  </p>
+</div>
 
-Look up Luxembourgish words in the [LOD dictionary](https://lod.lu) from any MCP-compatible AI tool — with minimal token usage.
+---
 
 ## Quick Start
 
-**Prerequisites:** [uv](https://docs.astral.sh/uv/getting-started/installation/)
+**Prerequisites:** [uv](https://docs.astral.sh/uv/getting-started/installation/) and Python 3.13+
 
 ```bash
-git clone https://github.com/Mohammed-Ashour/lod-mcp
+git clone https://github.com/OpenSprooch/lod-mcp
 cd lod-mcp
 ./install.sh          # uv venv + install + test
 ```
@@ -124,5 +140,9 @@ get_defs(["HAUS1","SCHOUL1"])    → {"HAUS1": "Haus: house …", "SCHOUL1": "Sc
 - **Rate-limited** — 100ms between requests, respects the LOD API
 - **Languages** — German, French, English, Portuguese, Dutch
 - **Source** — [LOD API](https://lod.lu/api/doc) by the Luxembourgish Ministry of Culture
+
+<div align="center">
+  <sub>Part of <a href="https://github.com/OpenSprooch">OpenSprooch</a> — Luxembourgish-language tooling.</sub>
+</div>
 
 MIT License
