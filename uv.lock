@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 5
 requires-python = ">=3.13"
 
 [[package]]
@@ -334,7 +334,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "mcp", extras = ["cli"], specifier = ">=1.26.0" },
+    { name = "mcp", extras = ["cli"], specifier = ">=1.26.0,<2" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.4.1" },
     { name = "requests", specifier = ">=2.33.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12.0" },
